@@ -1,56 +1,34 @@
 "use strict";
 
-const cities = [
-  ["Abadia dos Dourados", "MG"], ["Abaeté dos Mendes", "MG"], ["Água Comprida", "MG"],
-  ["Alexandrita", "MG"], ["Aparecida de Minas", "MG"], ["Araguari", "MG"],
-  ["Araporã", "MG"], ["Arapuá", "MG"], ["Araxá", "MG"], ["Arinos", "MG"],
-  ["Bonfinópolis de Minas", "MG"], ["Brasilândia de Minas", "MG"], ["Buritis", "MG"],
-  ["Cabeceira Grande", "MG"], ["Cachoeira Dourada", "MG"], ["Campina Verde", "MG"],
-  ["Campo Florido", "MG"], ["Campos Altos", "MG"], ["Canápolis", "MG"], ["Capinópolis", "MG"],
-  ["Carmo do Paranaíba", "MG"], ["Carneirinho", "MG"], ["Cascalho Rico", "MG"], ["Catalão", "GO"],
-  ["Centralina", "MG"], ["Chaveslândia", "MG"], ["Comendador Gomes", "MG"],
-  ["Conceição das Alagoas", "MG"], ["Conquista", "MG"], ["Coromandel", "MG"],
-  ["Cruzeiro da Fortaleza", "MG"], ["Delta", "MG"], ["Dom Bosco", "MG"],
-  ["Douradoquara", "MG"], ["Estrela do Sul", "MG"], ["Formoso", "MG"], ["Frutal", "MG"],
-  ["Grupiara", "MG"], ["Guarda-Mor", "MG"], ["Guimarânia", "MG"], ["Gurinhatã", "MG"],
-  ["Ibiá", "MG"], ["Indianópolis", "MG"], ["Ipiaçu", "MG"], ["Iraí de Minas", "MG"],
-  ["Itapagipe", "MG"], ["Ituiutaba", "MG"], ["Itumbiara", "GO"], ["Iturama", "MG"],
-  ["João Pinheiro", "MG"], ["Lagamar", "MG"], ["Lagoa Formosa", "MG"], ["Lagoa Grande", "MG"],
-  ["Limeira do Oeste", "MG"], ["Luizlândia do Oeste", "MG"], ["Matutina", "MG"],
-  ["Monte Alegre de Minas", "MG"], ["Monte Carmelo", "MG"], ["Natalândia", "MG"],
-  ["Nova Ponte", "MG"], ["Patos de Minas", "MG"], ["Patrocínio", "MG"], ["Pedrinópolis", "MG"],
-  ["Perdizes", "MG"], ["Pirajuba", "MG"], ["Planura", "MG"], ["Ponte Firme", "MG"],
-  ["Prata", "MG"], ["Pratinha", "MG"], ["Presidente Olegário", "MG"], ["Riachinho", "MG"],
-  ["Rio Paranaíba", "MG"], ["Romaria", "MG"], ["Sacramento", "MG"], ["Santa Juliana", "MG"],
-  ["Santa Rosa da Serra", "MG"], ["Santa Vitória", "MG"], ["São Francisco de Sales", "MG"],
-  ["São Gonçalo do Abaeté", "MG"], ["São Gotardo", "MG"], ["São Sebastião do Pontal", "MG"],
-  ["Serra do Salitre", "MG"], ["Tapira", "MG"], ["Tapuirama", "MG"], ["Tiros", "MG"],
-  ["Tupaciguara", "MG"], ["Uberaba", "MG"], ["Uberlândia", "MG"], ["Unaí", "MG"],
-  ["União de Minas", "MG"], ["Uruana de Minas", "MG"], ["Urucuia", "MG"],
-  ["Varjão de Minas", "MG"], ["Vazante", "MG"], ["Veríssimo", "MG"]
-].map(([name, state]) => ({ name, state }));
+const cities = coverageGeography.points.map(([name, latitude, longitude, geonamesId]) =>
+  ({ name, state: "MG", latitude, longitude, geonamesId })
+);
 
 const normalize = (value) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 const citySearch = document.querySelector("#city-search");
 const cityList = document.querySelector("#city-list");
 const cityCount = document.querySelector("#city-count");
 const loadMore = document.querySelector("#load-more");
-const filters = document.querySelectorAll(".filter");
-let selectedState = "all";
+const coverageMap = createCoverageMap(cities);
 let visibleCount = 12;
 
 function renderCities() {
   const query = normalize(citySearch.value);
-  const matches = cities.filter((city) =>
-    (selectedState === "all" || city.state === selectedState) &&
-    normalize(`${city.name} ${city.state}`).includes(query)
-  );
+  const matches = cities.filter((city) => normalize(`${city.name} ${city.state}`).includes(query));
   const fragment = document.createDocumentFragment();
   for (const city of matches.slice(0, visibleCount)) {
     const item = document.createElement("li");
-    const name = document.createElement("span");
+    const name = document.createElement("button");
     const state = document.createElement("span");
     name.textContent = city.name;
+    name.type = "button";
+    name.className = "city-map-button";
+    name.setAttribute("aria-label", `Ver ${city.name} no mapa de cobertura`);
+    name.addEventListener("click", () => {
+      coverageMap.select(city);
+      document.querySelector("#coverage-map").scrollIntoView({ block: "center", behavior: "auto" });
+      document.querySelector("#coverage-map").focus({ preventScroll: true });
+    });
     state.textContent = city.state;
     state.className = "city-state";
     item.append(name, state);
@@ -60,22 +38,13 @@ function renderCities() {
   cityCount.textContent = `${matches.length} ${matches.length === 1 ? "localidade" : "localidades"}`;
   document.querySelector("#city-empty").hidden = matches.length > 0;
   loadMore.hidden = visibleCount >= matches.length;
+  coverageMap.filter(matches);
 }
 
 citySearch.addEventListener("input", () => {
   visibleCount = 12;
   renderCities();
 });
-filters.forEach((button) => button.addEventListener("click", () => {
-  selectedState = button.dataset.state;
-  visibleCount = 12;
-  filters.forEach((filter) => {
-    const active = filter === button;
-    filter.classList.toggle("active", active);
-    filter.setAttribute("aria-pressed", String(active));
-  });
-  renderCities();
-}));
 loadMore.addEventListener("click", () => {
   const previousCount = cityList.children.length;
   visibleCount += 12;
@@ -138,10 +107,10 @@ const bases = {
   },
   uberlandia: {
     badge: "PRESENÇA REGIONAL", code: "UDI / MG", title: "Nossa origem. Sua conexão regional.",
-    description: "Uberlândia permanece como referência regional da Agiliza. O conhecimento das praças e a proximidade com os parceiros apoiam a rede de atendimento em Minas Gerais e Goiás.",
-    features: ["Referência regional consolidada", "Cobertura em Minas Gerais e Goiás", "Suporte operacional integrado à base de Guarulhos"],
-    address: "Uberlândia · Minas Gerais", location: "Consulte nossa equipe para o endereço e orientações de acesso.",
-    map: null
+    description: "Uberlândia permanece como referência regional da Agiliza. O conhecimento das praças e a proximidade com os parceiros apoiam a rede de atendimento em Minas Gerais.",
+    features: ["Referência regional consolidada", "Cobertura em Minas Gerais", "Suporte operacional integrado à base de Guarulhos"],
+    address: "Rua Bemira Montes Barroso, 657", location: "Jardim Maracanã · Uberlândia · Minas Gerais",
+    map: "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("Rua Bemira Montes Barroso, 657, Jardim Maracanã, Uberlândia, MG")
   }
 };
 document.querySelectorAll(".base-option").forEach((button) => button.addEventListener("click", () => {
@@ -165,25 +134,26 @@ document.querySelectorAll(".base-option").forEach((button) => button.addEventLis
   mapLink.hidden = !base.map;
   if (base.map) mapLink.href = base.map;
   else mapLink.removeAttribute("href");
+  mapLink.setAttribute("aria-label", `Ver endereço da base de ${button.dataset.base === "uberlandia" ? "Uberlândia" : "Guarulhos"} no Google Maps (abre em nova aba)`);
 }));
 
 const solutions = {
   regional: {
     title: "Transporte regional",
-    description: "Conhecimento de cada praça e proximidade com sua operação. A rede da Agiliza conecta localidades de Minas Gerais e Goiás a novas oportunidades de negócio.",
-    features: ["Atendimento regional em MG e GO", "Uberlândia como referência da rede", "Consulta de cobertura por localidade"],
+    description: "Conhecimento de cada praça e proximidade com sua operação. A rede da Agiliza conecta localidades de Minas Gerais a novas oportunidades de negócio.",
+    features: ["Atendimento regional em Minas Gerais", "Uberlândia como referência da rede", "Consulta de cobertura por localidade"],
     interest: "Transporte regional"
   },
   distribuicao: {
     title: "Distribuição e capilaridade",
     description: "Uma rede abrangente para apoiar os fluxos de distribuição da sua empresa, com conhecimento regional e atendimento personalizado.",
-    features: ["95 localidades identificadas no material institucional", "Presença no interior de Minas Gerais", "Conexões com Catalão e Itumbiara, em Goiás"],
+    features: ["93 localidades mineiras identificadas no material institucional", "Presença no interior de Minas Gerais", "Consulta geográfica de municípios e distritos"],
     interest: "Distribuição e capilaridade"
   },
   integracao: {
     title: "Integração entre bases",
     description: "Dois pontos estratégicos, uma visão integrada. A nova base em Guarulhos se soma à referência regional de Uberlândia e aproxima a operação do eixo paulista.",
-    features: ["Guarulhos: conexão com o eixo paulista", "Uberlândia: referência para a rede em MG e GO", "Integração operacional e comercial"],
+    features: ["Guarulhos: conexão com o eixo paulista", "Uberlândia: referência para a rede em Minas Gerais", "Integração operacional e comercial"],
     interest: "Integração entre bases"
   },
   parcerias: {
