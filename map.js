@@ -82,9 +82,12 @@ function createCoverageMap(cities) {
     center = toMap(city.longitude, city.latitude);
     zoom = Math.max(zoom, 3);
     cityName.textContent = `${city.name} / MG`;
-    cityDetail.textContent = city.name === "Uberlândia"
-      ? "Base: Rua Bemira Montes Barroso, 657 · Jardim Maracanã. O ponto representa a sede da cidade."
-      : "Localidade atendida em Minas Gerais. Confirme as condições com nossa equipe.";
+    const baseAddresses = {
+      "Uberlândia": "Base principal: Rua Cesar Mugnato, 367 · Bairro Industrial. O ponto representa a sede da cidade.",
+      "Uberaba": "Base: Rua Bemira Montes Barroso, 657 · Jardim Maracanã. O ponto representa a sede da cidade."
+    };
+    cityDetail.textContent = baseAddresses[city.name]
+      ?? "Localidade atendida em Minas Gerais. Confirme as condições com nossa equipe.";
     cityLink.href = "https://www.google.com/maps/search/?api=1&query=" +
       encodeURIComponent(`${city.latitude},${city.longitude}`);
     cityLink.setAttribute("aria-label", `Ver ${city.name} no Google Maps (abre em nova aba)`);

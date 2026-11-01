@@ -109,10 +109,18 @@ const bases = {
     badge: "PRESENÇA REGIONAL", code: "UDI / MG", title: "Nossa origem. Sua conexão regional.",
     description: "Uberlândia permanece como referência regional da Agiliza. O conhecimento das praças e a proximidade com os parceiros apoiam a rede de atendimento em Minas Gerais.",
     features: ["Referência regional consolidada", "Cobertura em Minas Gerais", "Suporte operacional integrado à base de Guarulhos"],
-    address: "Rua Bemira Montes Barroso, 657", location: "Jardim Maracanã · Uberlândia · Minas Gerais",
-    map: "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("Rua Bemira Montes Barroso, 657, Jardim Maracanã, Uberlândia, MG")
+    address: "Rua Cesar Mugnato, 367", location: "Bairro Industrial · Uberlândia · Minas Gerais",
+    map: "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("Rua Cesar Mugnato, 367, Bairro Industrial, Uberlândia, MG")
+  },
+  uberaba: {
+    badge: "APOIO REGIONAL", code: "UBA / MG", title: "Mais presença no Triângulo Mineiro.",
+    description: "A base de Uberaba reforça a rede da Agiliza em Minas Gerais, aproximando o atendimento de parceiros e clientes da região.",
+    features: ["Atendimento regional no Triângulo Mineiro", "Apoio à base principal de Uberlândia", "Integração com a rede de bases"],
+    address: "Rua Bemira Montes Barroso, 657", location: "Jardim Maracanã · Uberaba · Minas Gerais",
+    map: "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("Rua Bemira Montes Barroso, 657, Jardim Maracanã, Uberaba, MG")
   }
 };
+const baseNames = { guarulhos: "Guarulhos", uberlandia: "Uberlândia", uberaba: "Uberaba" };
 document.querySelectorAll(".base-option").forEach((button) => button.addEventListener("click", () => {
   const base = bases[button.dataset.base];
   document.querySelectorAll(".base-option").forEach((option) => {
@@ -134,7 +142,7 @@ document.querySelectorAll(".base-option").forEach((button) => button.addEventLis
   mapLink.hidden = !base.map;
   if (base.map) mapLink.href = base.map;
   else mapLink.removeAttribute("href");
-  mapLink.setAttribute("aria-label", `Ver endereço da base de ${button.dataset.base === "uberlandia" ? "Uberlândia" : "Guarulhos"} no Google Maps (abre em nova aba)`);
+  mapLink.setAttribute("aria-label", `Ver endereço da base de ${baseNames[button.dataset.base]} no Google Maps (abre em nova aba)`);
 }));
 
 const solutions = {
@@ -152,8 +160,8 @@ const solutions = {
   },
   integracao: {
     title: "Integração entre bases",
-    description: "Dois pontos estratégicos, uma visão integrada. A nova base em Guarulhos se soma à referência regional de Uberlândia e aproxima a operação do eixo paulista.",
-    features: ["Guarulhos: conexão com o eixo paulista", "Uberlândia: referência para a rede em Minas Gerais", "Integração operacional e comercial"],
+    description: "Três pontos estratégicos, uma visão integrada. A nova base em Guarulhos se soma às bases de Uberlândia e Uberaba e aproxima a operação do eixo paulista.",
+    features: ["Guarulhos: conexão com o eixo paulista", "Uberlândia: base principal da rede em Minas Gerais", "Uberaba: apoio regional no Triângulo Mineiro"],
     interest: "Integração entre bases"
   },
   parcerias: {
